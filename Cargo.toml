@@ -1,0 +1,7 @@
+[package]
+name = "ecsish"
+version = "0.0.1"
+authors = ["hilkojj"]
+edition = "2018"
+
+[dependencies]
