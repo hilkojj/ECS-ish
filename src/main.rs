@@ -14,11 +14,17 @@ fn main() {
     println!("{}", bits.get(1401));
 
     let mut bits2 = Bits::new();
-    bits2.set(5, true);
-    bits2.set(31, true);
+    // bits2.set(5, true);
+    // bits2.set(31, true);
     bits2.set(30, true);
     bits2.set(32, true);
 
-    println!("Does bits2 have all of bits? {}", bits.all(bits2));
+    println!("bits:  {}\n\nbits2: {}\n\n", &bits, &bits2);
+
+    println!("bits.all(&bits2) -> {}", bits.all(&bits2));
+
+    println!("bits.any(&bits2) -> {}", bits.any(&bits2));
+
+    println!("bits.none(&bits2) -> {}", bits.none(&bits2));
 
 }

@@ -38,55 +38,61 @@ impl Bits {
         self.ints.get(int_i).expect("int_i < int.len()") & check == check
     }
 
+    /// checks if all bits set in self are also set in other.
     pub fn all(&self, other: &Self) -> bool {
         for i in 0..self.ints.len() {
-            println!("{}", i);
-            if let (Some(self_int), Some(other_int)) = (self.ints.get(i), other.ints.get(i)) {
+            if let Some(self_int) = self.ints.get(i) {
 
-                // int is both found in self and other.
-                println!("self_int = {:08b}, other_int = {:08b}", self_int, other_int);
+                if let Some(other_int) = other.ints.get(i) {
 
-                if self_int & other_int != *self_int {
-                    return false
+                    // int is both found in self and other.
+                    println!("self_int = {:08b}, other_int = {:08b}", self_int, other_int);
+
+                    if self_int & other_int != *self_int {
+                        return false
+                    }
+                } else {
+                    // int was not found in other, now return false unless self_int == 000000...
+                    return *self_int == 0
                 }
+
             } else {
-                return false;
+                return true
             }
         }
-
         true
     }
 
-    // todo:
-    // pub fn any(&self, other: Self) -> bool {
-    //     for i in 0..self.ints.len() {
-    //         if let (Some(self_int), Some(other_int)) = (self.ints.get(i), other.ints.get(i)) {
+    /// checks if any bit set in self is also set in other
+    pub fn any(&self, other: &Self) -> bool {
+        for i in 0..self.ints.len() {
+            if let Some(self_int) = self.ints.get(i) {
 
-    //             // int is both found in self and other.
+                if let Some(other_int) = other.ints.get(i) {
 
-    //             if *self_int != 0 && self_int & other_int == 0 {
-    //                 return false
-    //             }
-    //         }
-    //     }
+                    // int is both found in self and other.
+                    println!("self_int = {:08b}, other_int = {:08b}", self_int, other_int);
 
-    //     true
-    // }
+                    if self_int & other_int != 0 {
+                        return true
+                    }
+                } else {
+                    // int was not found in other
+                    return false
+                }
 
-    // pub fn none(&self, other: Self) -> bool {
-    //     for i in 0..self.ints.len() {
-    //         if let (Some(self_int), Some(other_int)) = (self.ints.get(i), other.ints.get(i)) {
+            } else {
+                return false
+            }
+        }
+        false
+    }
 
-    //             // int is both found in self and other.
+    /// checks if all bits set in self are NOT set in other
+    pub fn none(&self, other: &Self) -> bool {
+        !self.any(other)
+    }
 
-    //             if self_int & other_int != 0 {
-    //                 return false
-    //             }
-    //         }
-    //     }
-
-    //     true
-    // }
 }
 
 impl fmt::Display for Bits {
