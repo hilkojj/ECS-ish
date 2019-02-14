@@ -1,4 +1,4 @@
-use std::mem;
+use std::{mem, fmt, format};
 
 type Int = u8;
 const BITS_PER_INT: usize = mem::size_of::<Int>() * 8;
@@ -38,7 +38,7 @@ impl Bits {
         self.ints.get(int_i).expect("int_i < int.len()") & check == check
     }
 
-    pub fn all(&self, other: Self) -> bool {
+    pub fn all(&self, other: &Self) -> bool {
         for i in 0..self.ints.len() {
             println!("{}", i);
             if let (Some(self_int), Some(other_int)) = (self.ints.get(i), other.ints.get(i)) {
@@ -87,4 +87,18 @@ impl Bits {
 
     //     true
     // }
+}
+
+impl fmt::Display for Bits {
+
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut res = String::new();
+
+        for i in 0..self.ints.len() {
+            res = res + &format!("{:08b}", &self.ints.get(i).expect("test"));
+        }
+
+        write!(f, "{}", res)
+    }
+
 }
