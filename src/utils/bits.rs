@@ -100,7 +100,7 @@ impl fmt::Display for Bits {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut res = String::new();
 
-        for i in 0..self.ints.len() {
+        for i in (0..self.ints.len()).rev() {
             res = res + &format!("{:08b}", &self.ints.get(i).expect("test"));
         }
 
