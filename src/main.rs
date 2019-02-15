@@ -1,8 +1,10 @@
 mod utils;
 mod ecs;
+mod examples;
 
 // use utils::Bits;
 use ecs::*;
+use examples::*;
 
 
 fn main() {
@@ -36,5 +38,9 @@ fn main() {
     let e = world.create_entity();
 
     world.add_component(e, {});
-    world.add_component(e, 5);  // an integer can also be a component if you really want to
+    world.add_component(e, 5u32);  // an integer can also be a component if you really want to
+
+    world.add_system(TestSystem {});
+    world.add_system(TestSystem {});
+
 }

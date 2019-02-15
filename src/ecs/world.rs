@@ -9,6 +9,8 @@ pub struct World {
 
     entities: HashMap<EntityId, Entity>,
     entity_id_counter: EntityId,
+
+    families: Vec<Family>
 }
 
 impl<'a> World {
@@ -18,7 +20,9 @@ impl<'a> World {
             component_type_i_counter: 0,
 
             entities: HashMap::new(),
-            entity_id_counter: 0
+            entity_id_counter: 0,
+
+            families: Vec::new()
         }
     }
 
@@ -30,7 +34,7 @@ impl<'a> World {
         self.entity_id_counter
     }
 
-    fn component_type_i<T>(&mut self) -> usize
+    pub fn component_type_i<T>(&mut self) -> usize
     where
         T: 'static,
     {
@@ -55,10 +59,25 @@ impl<'a> World {
 
         if let Some(entity) = self.entities.get_mut(&entity_id) {
             
-            entity.components.insert(type_id.clone(), Box::from(component));
+            entity.components.insert(type_id, Box::from(component));
             entity.component_bits.set(type_i, true);
             println!("{}", entity.component_bits);
-        }
-
+        }   
     }
+
+    pub fn add_system<T : System>(&mut self, system: T) {
+        let mut system = system;
+
+        let mut family = system.specify_family(FamilyBuilder {
+            world: self
+        });
+
+        if !self.families.contains(&family) {
+            println!("Family is unique and will be added to World.");
+            self.families.push(family);
+        } else {
+            println!("Family already existed");
+        }
+    }
+
 }

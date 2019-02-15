@@ -1,4 +1,4 @@
-use std::{mem, fmt, format};
+use std::{mem, fmt, format, cmp};
 
 type Int = u8;
 const BITS_PER_INT: usize = mem::size_of::<Int>() * 8;
@@ -108,3 +108,22 @@ impl fmt::Display for Bits {
     }
 
 }
+
+impl PartialEq for Bits {
+
+    fn eq(&self, other: &Bits) -> bool {
+
+        for i in 0..cmp::max(self.ints.len(), other.ints.len()) {
+
+            let self_int = self.ints.get(i).unwrap_or(&0);
+            let other_int = other.ints.get(i).unwrap_or(&0);
+
+            if self_int != other_int {
+                return false
+            }
+        }
+        true
+    }
+}
+
+impl Eq for Bits {}
