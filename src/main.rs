@@ -1,9 +1,12 @@
 mod utils;
+mod ecs;
 
-use utils::Bits;
+// use utils::Bits;
+use ecs::*;
+
 
 fn main() {
-    
+    /*
     let mut bits = Bits::new();
 
     bits.set(5, true);
@@ -26,5 +29,12 @@ fn main() {
     println!("bits.any(&bits2) -> {}", bits.any(&bits2));
 
     println!("bits.none(&bits2) -> {}", bits.none(&bits2));
+    */
 
+    let mut world = World::new();
+
+    let e = world.create_entity();
+
+    world.add_component(e, {});
+    world.add_component(e, 5);  // an integer can also be a component if you really want to
 }
