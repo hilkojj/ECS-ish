@@ -3,6 +3,7 @@ use crate::ecs::*;
 use std::any::TypeId;
 use std::collections::HashMap;
 use std::ops::DerefMut;
+use std::rc::Rc;
 
 pub struct World {
     component_type_to_i: HashMap<TypeId, usize>,
@@ -67,7 +68,7 @@ impl<'a> World {
         let type_i = self.component_type_id_i(&type_id);
 
         if let Some(entity) = self.entities.get_mut(&entity_id) {
-            entity.components.insert(type_id, Box::from(component));
+            entity.components.insert(type_id, Rc::new(component));
             entity.component_bits.set(type_i, true);
             if !entity.dirty {
                 self.dirty_entities.push(entity_id);
@@ -113,11 +114,7 @@ impl<'a> World {
             family_index = i; // family already exists
         } else {
             // family did not exist already -> save it.
-            self.family_metas.push(FamilyMeta {
-                family,
-                entities: Vec::new(),
-                initialized: false,
-            });
+            self.family_metas.push(FamilyMeta::new(family));
             family_index = self.family_metas.len() - 1;
         }
 

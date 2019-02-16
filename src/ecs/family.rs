@@ -1,13 +1,32 @@
 use crate::ecs::{Entity, EntityId};
 use crate::utils::Bits;
 
+use std::any::{Any, TypeId};
+use std::collections::HashMap;
+use std::rc::Rc;
+
 pub struct FamilyMeta {
     pub family: Family,
-    pub entities: Vec<EntityId>,
     pub initialized: bool,
+    pub entities: Vec<EntityId>,
+
+    components: HashMap<TypeId, Vec<Option<Rc<Any>>>>,
 }
 
 impl FamilyMeta {
+    pub fn new(family: Family) -> Self {
+        let mut components = HashMap::new();
+        for type_id in &family.component_types {
+            components.insert(*type_id, Vec::new());
+        }
+        Self {
+            family,
+            components,
+            entities: Vec::new(),
+            initialized: false,
+        }
+    }
+
     pub fn insert_or_take_from_family(
         &mut self,
         family_i: usize,
@@ -26,6 +45,7 @@ impl FamilyMeta {
             println!("Adding entity to family");
             self.entities.push(entity_id);
             entity.family_bits.set(family_i, true);
+            self.save_components(entity);
         } else if !should_have && already_in_family {
             println!("Removing entity from family");
 
@@ -35,7 +55,28 @@ impl FamilyMeta {
                 .position(|id| id == &entity_id)
                 .expect("entity_id to have a position in self.entities");
             self.entities.swap_remove(entity_index_in_family);
+            self.swap_remove_components(entity_index_in_family);
             entity.family_bits.set(family_i, false);
+        }
+    }
+
+    fn swap_remove_components(&mut self, index: usize) {
+        for type_id in &self.family.component_types {
+
+            let list = self.components.get_mut(type_id).expect("vector for type_id to be made at FamilyMeta::new()");
+            list.swap_remove(index);
+        }
+    }
+
+    fn save_components(&mut self, entity: &Entity) {
+        for type_id in &self.family.component_types {
+
+            let list = self.components.get_mut(type_id).expect("vector for type_id to be made at FamilyMeta::new()");
+            if let Some(component) = entity.components.get(type_id) {
+                list.push(Some(component.clone()));
+            } else {
+                list.push(None);
+            }
         }
     }
 }
@@ -44,6 +85,8 @@ pub struct Family {
     pub all_components: Bits,
     pub any_components: Bits,
     pub exclude_components: Bits,
+
+    pub component_types: Vec<TypeId>,
 }
 
 impl Family {
@@ -52,6 +95,8 @@ impl Family {
             all_components: Bits::new(),
             any_components: Bits::new(),
             exclude_components: Bits::new(),
+
+            component_types: Vec::new(),
         }
     }
 
