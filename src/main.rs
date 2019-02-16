@@ -40,7 +40,7 @@ fn main() {
     world.add_component(e, {});
     world.add_component(e, 5u32);  // an integer can also be a component if you really want to
 
-    world.add_system(TestSystem {});
-    world.add_system(TestSystem {});
+    world.add_system(TestSystem {}, 0);
+    world.add_system(TestSystem {}, 100);
 
 }

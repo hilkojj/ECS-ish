@@ -1,15 +1,15 @@
-use super::entity::Entity;
+use crate::ecs::EntityId;
 use crate::utils::Bits;
 
-use std::any::{Any, TypeId};
-use std::collections::HashMap;
+pub struct FamilyMeta {
+    pub family: Family,
+    pub entities: Vec<EntityId>,
+}
 
 pub struct Family {
     all_components: Bits,
     any_components: Bits,
     exclude_components: Bits,
-
-    pub entities: Vec<Entity>,
 }
 
 impl Family {
@@ -18,8 +18,6 @@ impl Family {
             all_components: Bits::new(),
             any_components: Bits::new(),
             exclude_components: Bits::new(),
-
-            entities: Vec::new(),
         }
     }
 }
