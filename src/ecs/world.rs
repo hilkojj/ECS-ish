@@ -10,6 +10,7 @@ pub struct World {
 
     entities: HashMap<EntityId, Entity>,
     entity_id_counter: EntityId,
+    dirty_entities: Vec<EntityId>,
 
     family_metas: Vec<FamilyMeta>,
     system_metas: Vec<SystemMeta>,
@@ -24,6 +25,7 @@ impl<'a> World {
 
             entities: HashMap::new(),
             entity_id_counter: 0,
+            dirty_entities: Vec::new(),
 
             family_metas: Vec::new(),
             system_metas: Vec::new(),
@@ -67,6 +69,9 @@ impl<'a> World {
         if let Some(entity) = self.entities.get_mut(&entity_id) {
             entity.components.insert(type_id, Box::from(component));
             entity.component_bits.set(type_i, true);
+            if !entity.dirty {
+                self.dirty_entities.push(entity_id);
+            }
             entity.dirty = true;
         }
     }
@@ -81,6 +86,9 @@ impl<'a> World {
         if let Some(entity) = self.entities.get_mut(&entity_id) {
             entity.components.remove(&type_id);
             entity.component_bits.set(type_i, false);
+            if !entity.dirty {
+                self.dirty_entities.push(entity_id);
+            }
             entity.dirty = true;
         }
     }
@@ -106,6 +114,7 @@ impl<'a> World {
             self.family_metas.push(FamilyMeta {
                 family,
                 entities: Vec::new(),
+                initialized: false,
             });
             family_index = self.family_metas.len() - 1;
         }
@@ -137,15 +146,31 @@ impl<'a> World {
     }
 
     pub fn update(&mut self) {
+        // for each dirty entity -> recheck family memberships.
+        for entity_id in &self.dirty_entities {
+            if let Some(entity) = self.entities.get_mut(&entity_id) {
+                println!("Rechecking family memberships for Entity {}", entity_id);
+                for (fam_i, fam_meta) in self.family_metas.iter_mut().enumerate() {
+                    fam_meta.insert_or_take_from_family(fam_i, entity, *entity_id);
+                }
+                entity.dirty = false;
+            }
+        }
+        self.dirty_entities.clear();
 
-        let entity_id = 1;
-        let entity = self.entities.get_mut(&entity_id).unwrap();
-        let fam_meta = self.family_metas.get_mut(0).unwrap();
-        fam_meta.insert_or_take_from_family(
-            0,
-            entity,
-            entity_id
-        );
+        // for each new family -> find entities
+        for (fam_i, fam_meta) in self
+            .family_metas
+            .iter_mut()
+            .filter(|meta| !meta.initialized)
+            .enumerate()
+        {
+            println!("Finding entities for new Family");
+            for (entity_id, entity) in &mut self.entities {
+                fam_meta.insert_or_take_from_family(fam_i, entity, *entity_id);
+            }
+            fam_meta.initialized = true;
+        }
 
         for sys_meta in &mut self.system_metas {
             sys_meta.system.deref_mut().update(

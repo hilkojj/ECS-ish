@@ -4,6 +4,7 @@ use crate::utils::Bits;
 pub struct FamilyMeta {
     pub family: Family,
     pub entities: Vec<EntityId>,
+    pub initialized: bool
 }
 
 impl FamilyMeta {
