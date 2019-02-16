@@ -2,6 +2,7 @@ use crate::ecs::*;
 
 use std::any::TypeId;
 use std::collections::HashMap;
+use std::any::Any;
 
 pub struct World {
     component_type_to_i: HashMap<TypeId, usize>,
@@ -70,7 +71,7 @@ impl<'a> World {
         }
     }
 
-    pub fn add_system<T: System>(&'a mut self, mut system: T, priority: usize)
+    pub fn add_system<T: System>(&'a mut self, mut system: T, priority: usize) -> SystemId
     where
         T: 'static,
     {
@@ -102,5 +103,18 @@ impl<'a> World {
         println!("nr. of systems in World: {}", self.system_metas.len());
         println!("{:?}", self.system_metas);
         self.system_id_counter += 1;
+
+        self.system_id_counter - 1
     }
+
+    pub fn remove_system(&mut self, system_id: SystemId) -> bool {
+
+        if let Some(sys_i) = self.system_metas.iter().position(|sys| sys.id == system_id) {
+            self.system_metas.remove(sys_i);
+            println!("{:?}", self.system_metas);
+            return true
+        }
+        false
+    }
+
 }
