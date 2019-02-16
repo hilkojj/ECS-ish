@@ -67,7 +67,7 @@ impl<'a> World {
         if let Some(entity) = self.entities.get_mut(&entity_id) {
             entity.components.insert(type_id, Box::from(component));
             entity.component_bits.set(type_i, true);
-            println!("{}", entity.component_bits);
+            entity.dirty = true;
         }
     }
 
@@ -81,7 +81,7 @@ impl<'a> World {
         if let Some(entity) = self.entities.get_mut(&entity_id) {
             entity.components.remove(&type_id);
             entity.component_bits.set(type_i, false);
-            println!("{}", entity.component_bits);
+            entity.dirty = true;
         }
     }
 
@@ -89,7 +89,10 @@ impl<'a> World {
     where
         T: 'static,
     {
-        let family = system.specify_family(FamilyBuilder { world: self });
+        // let the system specify what family of entities it wants:
+        let mut family = Family::new();
+        system.init(FamilyBuilder::new(self, &mut family));
+
         let family_index;
 
         if let Some(i) = self
@@ -97,10 +100,9 @@ impl<'a> World {
             .iter()
             .position(|meta| meta.family == family)
         {
-            println!("Family already exists");
-            family_index = i;
+            family_index = i; // family already exists
         } else {
-            println!("Family is unique and will be added to World.");
+            // family did not exist already -> save it.
             self.family_metas.push(FamilyMeta {
                 family,
                 entities: Vec::new(),
@@ -114,34 +116,43 @@ impl<'a> World {
             id: self.system_id_counter,
             family_index,
         };
+        self.system_metas.push(system_meta); // save system
 
-        self.system_metas.push(system_meta);
-
-        self.system_metas
-            .sort_by(|a, b| b.priority.partial_cmp(&a.priority).unwrap());
-        println!("nr. of systems in World: {}", self.system_metas.len());
-        println!("{:?}", self.system_metas);
+        self.system_metas // sort systems by priority
+            .sort_by(|a, b| {
+                b.priority
+                    .partial_cmp(&a.priority)
+                    .expect("system.priority to be comparable")
+            });
         self.system_id_counter += 1;
-
-        self.system_id_counter - 1
+        self.system_id_counter - 1 // return system_id
     }
 
     pub fn remove_system(&mut self, system_id: SystemId) -> bool {
         if let Some(sys_i) = self.system_metas.iter().position(|sys| sys.id == system_id) {
             self.system_metas.remove(sys_i);
-            println!("{:?}", self.system_metas);
             return true;
         }
         false
     }
 
     pub fn update(&mut self) {
+
+        let entity_id = 1;
+        let entity = self.entities.get_mut(&entity_id).unwrap();
+        let fam_meta = self.family_metas.get_mut(0).unwrap();
+        fam_meta.insert_or_take_from_family(
+            0,
+            entity,
+            entity_id
+        );
+
         for sys_meta in &mut self.system_metas {
             sys_meta.system.deref_mut().update(
                 &self
                     .family_metas
                     .get(sys_meta.family_index)
-                    .unwrap()
+                    .expect("sys_meta.family_index < self.family_metas.len()")
                     .entities,
             );
         }

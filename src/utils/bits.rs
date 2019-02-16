@@ -10,13 +10,16 @@ pub struct Bits {
 impl Bits {
     pub fn new() -> Self {
         Self {
-            ints: vec![0],
+            ints: Vec::new(),
         }
     }
 
     pub fn set(&mut self, i: usize, val: bool) {
         let int_i = i / BITS_PER_INT;
         while int_i >= self.ints.len() {
+            if !val {
+                return;
+            }
             self.ints.push(0);
         }
         let int = self.ints.get_mut(int_i).expect("int_i < ints.len()");
@@ -91,6 +94,15 @@ impl Bits {
     /// checks if all bits set in self are NOT set in other
     pub fn none(&self, other: &Self) -> bool {
         !self.any(other)
+    }
+
+    pub fn is_zero(&self) -> bool {
+        for int in &self.ints {
+            if int != &0 {
+                return false;
+            }
+        }
+        true
     }
 
 }

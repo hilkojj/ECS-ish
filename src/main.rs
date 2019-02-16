@@ -38,7 +38,7 @@ fn main() {
     let e = world.create_entity();
 
     world.add_component(e, {});
-    world.add_component(e, 5u32);  // an integer can also be a component if you really want to
+    world.add_component(e, 5usize);  // an integer can also be a component if you really want to
 
     let sys1 = world.add_system(TestSystem {}, 0);
     let sys2 = world.add_system(TestSystem {}, 100);

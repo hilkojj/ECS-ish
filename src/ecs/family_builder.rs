@@ -2,20 +2,47 @@ use crate::ecs::{Family, World};
 
 pub struct FamilyBuilder<'a> {
     pub world: &'a mut World,
+    component_indexes: Vec<usize>,
+    pub family: &'a mut Family,
 }
 
 impl<'a> FamilyBuilder<'a> {
+    pub fn new(world: &'a mut World, family: &'a mut Family) -> Self {
+        Self {
+            world,
+            family,
+            component_indexes: Vec::new(),
+        }
+    }
+
     pub fn component<T>(&mut self) -> &mut Self
     where
         T: 'static,
     {
-        println!("adding: {}", self.world.component_type_i::<T>());
+        let i = self.world.component_type_i::<T>();
+        println!("adding: {}", i);
+        self.component_indexes.push(i);
         self
     }
 
-    pub fn all(&mut self) {}
+    pub fn all(&mut self) {
+        for i in &self.component_indexes {
+            self.family.all_components.set(*i, true);
+        }
+        self.component_indexes.clear();
+    }
 
-    pub fn build(&mut self) -> Family {
-        Family::new()
+    pub fn any(&mut self) {
+        for i in &self.component_indexes {
+            self.family.any_components.set(*i, true);
+        }
+        self.component_indexes.clear();
+    }
+
+    pub fn none(&mut self) {
+        for i in &self.component_indexes {
+            self.family.exclude_components.set(*i, true);
+        }
+        self.component_indexes.clear();
     }
 }
