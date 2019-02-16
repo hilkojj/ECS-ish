@@ -4,13 +4,13 @@ use crate::utils::Bits;
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
 use std::rc::Rc;
+use std::cell::RefCell;
 
 pub struct FamilyMeta {
     pub family: Family,
     pub initialized: bool,
     pub entities: Vec<EntityId>,
-
-    components: HashMap<TypeId, Vec<Option<Rc<Any>>>>,
+    pub components: HashMap<TypeId, Vec<Option<Rc<Box<RefCell<Any>>>>>>,
 }
 
 impl FamilyMeta {

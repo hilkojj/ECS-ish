@@ -4,6 +4,7 @@ use std::any::TypeId;
 use std::collections::HashMap;
 use std::ops::DerefMut;
 use std::rc::Rc;
+use std::cell::RefCell;
 
 pub struct World {
     component_type_to_i: HashMap<TypeId, usize>,
@@ -68,7 +69,7 @@ impl<'a> World {
         let type_i = self.component_type_id_i(&type_id);
 
         if let Some(entity) = self.entities.get_mut(&entity_id) {
-            entity.components.insert(type_id, Rc::new(component));
+            entity.components.insert(type_id, Rc::new(Box::new(RefCell::new(component))));
             entity.component_bits.set(type_i, true);
             if !entity.dirty {
                 self.dirty_entities.push(entity_id);
@@ -172,12 +173,13 @@ impl<'a> World {
         }
 
         for sys_meta in &mut self.system_metas {
-            sys_meta.system.deref_mut().update(
-                &self
+            let fam_meta = self
                     .family_metas
                     .get(sys_meta.family_index)
-                    .expect("sys_meta.family_index < self.family_metas.len()")
-                    .entities,
+                    .expect("sys_meta.family_index < self.family_metas.len()");
+            sys_meta.system.deref_mut().update(
+                &fam_meta.entities,
+                &fam_meta.components
             );
         }
     }
