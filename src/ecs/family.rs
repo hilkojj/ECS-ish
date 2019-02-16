@@ -27,15 +27,12 @@ impl FamilyMeta {
             self.entities.push(entity_id);
             entity.family_bits.set(family_i, true);
 
-            while entity.index_in_family.len() <= family_i {
+            while entity.index_in_family.len() < family_i {
                 entity.index_in_family.push(None);
             }
-
             let entity_index_in_family = self.entities.len() - 1;
-            entity
-                .index_in_family
-                .get_mut(family_i)
-                .replace(&mut Some(entity_index_in_family));
+            entity.index_in_family.push(Some(entity_index_in_family));
+
         } else if !should_have && already_in_family {
             println!("Removing entity from family");
 
