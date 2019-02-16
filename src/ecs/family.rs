@@ -4,7 +4,7 @@ use crate::utils::Bits;
 pub struct FamilyMeta {
     pub family: Family,
     pub entities: Vec<EntityId>,
-    pub initialized: bool
+    pub initialized: bool,
 }
 
 impl FamilyMeta {
@@ -26,22 +26,14 @@ impl FamilyMeta {
             println!("Adding entity to family");
             self.entities.push(entity_id);
             entity.family_bits.set(family_i, true);
-
-            while entity.index_in_family.len() < family_i {
-                entity.index_in_family.push(None);
-            }
-            let entity_index_in_family = self.entities.len() - 1;
-            entity.index_in_family.push(Some(entity_index_in_family));
-
         } else if !should_have && already_in_family {
             println!("Removing entity from family");
 
-            let entity_index_in_family = entity
-                .index_in_family
-                .get(family_i)
-                .expect("entity_i in family to be registered")
-                .expect("entity_i in family to be NOT None");
-
+            let entity_index_in_family = self
+                .entities
+                .iter()
+                .position(|id| id == &entity_id)
+                .expect("entity_id to have a position in self.entities");
             self.entities.swap_remove(entity_index_in_family);
             entity.family_bits.set(family_i, false);
         }

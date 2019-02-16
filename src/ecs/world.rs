@@ -71,12 +71,12 @@ impl<'a> World {
             entity.component_bits.set(type_i, true);
             if !entity.dirty {
                 self.dirty_entities.push(entity_id);
+                entity.dirty = true;
             }
-            entity.dirty = true;
         }
     }
 
-    pub fn remove_component<T>(&mut self, entity_id: EntityId)
+    pub fn remove_component<T>(&mut self, entity_id: EntityId) -> bool
     where
         T: 'static,
     {
@@ -84,13 +84,15 @@ impl<'a> World {
         let type_i = self.component_type_id_i(&type_id);
 
         if let Some(entity) = self.entities.get_mut(&entity_id) {
-            entity.components.remove(&type_id);
+            let removed_comp = entity.components.remove(&type_id).is_some();
             entity.component_bits.set(type_i, false);
-            if !entity.dirty {
+            if !entity.dirty && removed_comp {
                 self.dirty_entities.push(entity_id);
+                entity.dirty = true;
             }
-            entity.dirty = true;
+            return removed_comp;
         }
+        false
     }
 
     pub fn add_system<T: System>(&'a mut self, mut system: T, priority: usize) -> SystemId

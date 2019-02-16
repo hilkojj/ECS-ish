@@ -43,11 +43,15 @@ fn main() {
     let sys1 = world.add_system(TestSystem {}, 0);
     let sys2 = world.add_system(TestSystem {}, 100);
 
+    println!("\n\nUPDATE 1:\n==========================\n");
     world.update();
 
     world.remove_system(sys1);
+    
+    println!("removed component? {}", world.remove_component::<usize>(e));
 
-    world.remove_component::<u32>(e);
+    println!("\n\nUPDATE 2:\n==========================\n");
+    world.update();
 
     world.remove_system(sys2);
 

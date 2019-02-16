@@ -10,7 +10,6 @@ pub struct Entity {
     pub components: HashMap<TypeId, Box<Any>>,
     pub component_bits: Bits,
     pub family_bits: Bits,
-    pub index_in_family: Vec<Option<usize>>,
     pub dirty: bool
     
 }
