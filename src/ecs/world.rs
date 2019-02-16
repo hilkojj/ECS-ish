@@ -98,7 +98,9 @@ impl<'a> World {
 
         self.system_metas.push(system_meta);
 
+        self.system_metas.sort_by(|a, b| b.priority.partial_cmp(&a.priority).unwrap());
         println!("nr. of systems in World: {}", self.system_metas.len());
+        println!("{:?}", self.system_metas);
         self.system_id_counter += 1;
     }
 }
