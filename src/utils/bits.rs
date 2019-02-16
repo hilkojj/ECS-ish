@@ -24,7 +24,7 @@ impl Bits {
         if val {
             *int |= 1 << i;
         } else {
-            *int &= 0 << i;
+            *int &= !(1 << i);
         }
     }
 

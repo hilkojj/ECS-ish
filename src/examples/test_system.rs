@@ -1,4 +1,4 @@
-use crate::ecs::{Family, FamilyBuilder, System};
+use crate::ecs::{Family, FamilyBuilder, System, EntityId};
 
 pub struct TestSystem {}
 
@@ -15,4 +15,9 @@ impl System for TestSystem {
 
         family_builder.build()
     }
+
+    fn update(&mut self, entity_ids: &Vec<EntityId>) {
+        println!("hi im gonna update: {:?}", entity_ids);
+    }
+
 }

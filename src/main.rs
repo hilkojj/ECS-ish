@@ -43,7 +43,12 @@ fn main() {
     let sys1 = world.add_system(TestSystem {}, 0);
     let sys2 = world.add_system(TestSystem {}, 100);
 
+    world.update();
+
     world.remove_system(sys1);
+
+    world.remove_component::<u32>(e);
+
     world.remove_system(sys2);
 
 }

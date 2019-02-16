@@ -2,7 +2,7 @@ use crate::ecs::*;
 
 use std::any::TypeId;
 use std::collections::HashMap;
-use std::any::Any;
+use std::ops::DerefMut;
 
 pub struct World {
     component_type_to_i: HashMap<TypeId, usize>,
@@ -71,21 +71,39 @@ impl<'a> World {
         }
     }
 
+    pub fn remove_component<T>(&mut self, entity_id: EntityId)
+    where
+        T: 'static,
+    {
+        let type_id = TypeId::of::<T>();
+        let type_i = self.component_type_id_i(&type_id);
+
+        if let Some(entity) = self.entities.get_mut(&entity_id) {
+            entity.components.remove(&type_id);
+            entity.component_bits.set(type_i, false);
+            println!("{}", entity.component_bits);
+        }
+    }
+
     pub fn add_system<T: System>(&'a mut self, mut system: T, priority: usize) -> SystemId
     where
         T: 'static,
     {
-        let mut family = system.specify_family(FamilyBuilder { world: self });
-        let mut family_index = 0;
+        let family = system.specify_family(FamilyBuilder { world: self });
+        let family_index;
 
-        if let Some(i) = self.family_metas.iter().position(|meta| meta.family == family) {
+        if let Some(i) = self
+            .family_metas
+            .iter()
+            .position(|meta| meta.family == family)
+        {
             println!("Family already exists");
             family_index = i;
         } else {
             println!("Family is unique and will be added to World.");
             self.family_metas.push(FamilyMeta {
                 family,
-                entities: Vec::new()
+                entities: Vec::new(),
             });
             family_index = self.family_metas.len() - 1;
         }
@@ -94,12 +112,13 @@ impl<'a> World {
             priority,
             system: Box::new(system),
             id: self.system_id_counter,
-            family_index
+            family_index,
         };
 
         self.system_metas.push(system_meta);
 
-        self.system_metas.sort_by(|a, b| b.priority.partial_cmp(&a.priority).unwrap());
+        self.system_metas
+            .sort_by(|a, b| b.priority.partial_cmp(&a.priority).unwrap());
         println!("nr. of systems in World: {}", self.system_metas.len());
         println!("{:?}", self.system_metas);
         self.system_id_counter += 1;
@@ -108,13 +127,23 @@ impl<'a> World {
     }
 
     pub fn remove_system(&mut self, system_id: SystemId) -> bool {
-
         if let Some(sys_i) = self.system_metas.iter().position(|sys| sys.id == system_id) {
             self.system_metas.remove(sys_i);
             println!("{:?}", self.system_metas);
-            return true
+            return true;
         }
         false
     }
 
+    pub fn update(&mut self) {
+        for sys_meta in &mut self.system_metas {
+            sys_meta.system.deref_mut().update(
+                &self
+                    .family_metas
+                    .get(sys_meta.family_index)
+                    .unwrap()
+                    .entities,
+            );
+        }
+    }
 }

@@ -1,5 +1,5 @@
 
-use crate::ecs::{FamilyBuilder, Family};
+use crate::ecs::{FamilyBuilder, Family, EntityId};
 use std::fmt;
 
 pub type SystemId = usize;
@@ -23,5 +23,7 @@ impl fmt::Debug for SystemMeta {
 pub trait System {
     
     fn specify_family(&mut self, family_builder: FamilyBuilder) -> Family;
+
+    fn update(&mut self, entity_ids: &Vec<EntityId>);
 
 }
