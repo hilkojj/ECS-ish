@@ -1,4 +1,4 @@
-use std::{mem, fmt, format};
+use std::{mem, fmt, format, cmp};
 
 type Int = u8;
 const BITS_PER_INT: usize = mem::size_of::<Int>() * 8;
@@ -10,13 +10,16 @@ pub struct Bits {
 impl Bits {
     pub fn new() -> Self {
         Self {
-            ints: vec![0],
+            ints: Vec::new(),
         }
     }
 
     pub fn set(&mut self, i: usize, val: bool) {
         let int_i = i / BITS_PER_INT;
         while int_i >= self.ints.len() {
+            if !val {
+                return;
+            }
             self.ints.push(0);
         }
         let int = self.ints.get_mut(int_i).expect("int_i < ints.len()");
@@ -24,7 +27,7 @@ impl Bits {
         if val {
             *int |= 1 << i;
         } else {
-            *int &= 0 << i;
+            *int &= !(1 << i);
         }
     }
 
@@ -93,6 +96,15 @@ impl Bits {
         !self.any(other)
     }
 
+    pub fn is_zero(&self) -> bool {
+        for int in &self.ints {
+            if int != &0 {
+                return false;
+            }
+        }
+        true
+    }
+
 }
 
 impl fmt::Display for Bits {
@@ -108,3 +120,22 @@ impl fmt::Display for Bits {
     }
 
 }
+
+impl PartialEq for Bits {
+
+    fn eq(&self, other: &Bits) -> bool {
+
+        for i in 0..cmp::max(self.ints.len(), other.ints.len()) {
+
+            let self_int = self.ints.get(i).unwrap_or(&0);
+            let other_int = other.ints.get(i).unwrap_or(&0);
+
+            if self_int != other_int {
+                return false
+            }
+        }
+        true
+    }
+}
+
+impl Eq for Bits {}
