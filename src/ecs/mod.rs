@@ -13,3 +13,6 @@ mod family_builder;
 
 pub use family::*;
 mod family;
+
+pub use component_type::*;
+mod component_type;

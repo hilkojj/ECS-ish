@@ -20,10 +20,9 @@ impl fmt::Debug for SystemMeta {
     }
 }
 pub trait System {
-    fn init(&mut self, family_builder: FamilyBuilder);
+    fn create(family_builder: FamilyBuilder) -> Self
+    where
+        Self: Sized;
 
-    fn update(
-        &mut self,
-        entities: &[AtomicEntity],
-    );
+    fn update(&mut self, entities: &[AtomicEntity]);
 }

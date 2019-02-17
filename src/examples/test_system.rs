@@ -1,30 +1,28 @@
-use crate::ecs::{AtomicEntity, FamilyBuilder, System};
+use crate::ecs::{AtomicEntity, ComponentType, FamilyBuilder, System};
 
-pub struct TestSystem {}
+pub struct TestSystem {
+    usize_comp_type: ComponentType<usize>,
+}
 
 impl System for TestSystem {
-    fn init(&mut self, mut family_builder: FamilyBuilder) {
+    fn create(mut builder: FamilyBuilder) -> Self {
         println!("Hi im going to specify the family");
 
-        family_builder
-            .component::<usize>()
-            // .component::<u32>()
-            // .component::<u8>()
-            .all();
+        let s = Self {
+            usize_comp_type: builder.component::<usize>(),
+        };
+        builder.all();
+        s
     }
 
-    fn update(
-        &mut self,
-        entities: &[AtomicEntity],
-    ) {
+    fn update(&mut self, entities: &[AtomicEntity]) {
         println!("hi im gonna update {} entities", entities.len());
 
         for atomic_entity in entities {
             let mut entity = atomic_entity.lock().unwrap();
 
-            let component = entity.comp::<usize>();
+            let component = entity.comp(&self.usize_comp_type);
             *component += 1;
         }
-
     }
 }

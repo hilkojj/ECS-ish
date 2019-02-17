@@ -1,7 +1,12 @@
-use crate::utils::Bits;
-use std::any::Any;
-use std::ops::DerefMut;
-use std::sync::{Arc, Mutex};
+use crate::{
+    utils::Bits,
+    ecs::ComponentType
+};
+use std::{
+    any::Any,
+    ops::DerefMut,
+    sync::{Arc, Mutex}
+};
 
 pub type AtomicEntity = Arc<Mutex<Entity>>;
 
@@ -43,14 +48,13 @@ impl Entity {
         false
     }
 
-    pub fn comp<T>(&mut self) -> &mut T
+    pub fn comp<T>(&mut self, component_type: &ComponentType<T>) -> &mut T
     where
         T: 'static,
     {
-        let i = 0; // TODOOOOOOOOOOOO
         let comp_opt = self
             .components
-            .get_mut(i)
+            .get_mut(component_type.index)
             .expect("i < self.components.len()");
         let any_mut_ref = comp_opt.as_mut().expect("required").deref_mut();
         any_mut_ref
@@ -58,12 +62,11 @@ impl Entity {
             .expect("component must be type T")
     }
 
-    pub fn optional_comp<T>(&mut self) -> Option<&mut T>
+    pub fn optional_comp<T>(&mut self, component_type: &ComponentType<T>) -> Option<&mut T>
     where
         T: 'static,
     {
-        let i = 0; // TODOOOOOOOOOOO
-        let comp_opt = self.components.get_mut(i)?;
+        let comp_opt = self.components.get_mut(component_type.index)?;
         let mut any_mut_ref = comp_opt.as_mut()?.deref_mut();
         Some(any_mut_ref.downcast_mut::<T>()?)
     }

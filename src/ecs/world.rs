@@ -100,13 +100,13 @@ impl<'a> World {
         false
     }
 
-    pub fn add_system<T: System>(&'a mut self, mut system: T, priority: usize) -> SystemId
+    pub fn add_system<T: System>(&'a mut self, priority: usize) -> SystemId
     where
         T: 'static,
     {
         // let the system specify what family of entities it wants:
         let mut family = Family::new();
-        system.init(FamilyBuilder::new(self, &mut family));
+        let mut system = T::create(FamilyBuilder::new(self, &mut family));
 
         let family_index;
 

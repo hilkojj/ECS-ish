@@ -1,4 +1,4 @@
-use crate::ecs::{Family, World};
+use crate::ecs::{Family, World, ComponentType};
 
 pub struct FamilyBuilder<'a> {
     pub world: &'a mut World,
@@ -15,14 +15,14 @@ impl<'a> FamilyBuilder<'a> {
         }
     }
 
-    pub fn component<T>(&mut self) -> &mut Self
+    pub fn component<T>(&mut self) -> ComponentType<T>
     where
         T: 'static,
     {
         let i = self.world.component_type_i::<T>();
         println!("adding: {}", i);
         self.component_indexes.push(i);
-        self
+        ComponentType::<T>::new(i)
     }
 
     pub fn all(&mut self) {

@@ -40,8 +40,8 @@ fn main() {
     world.add_component(e, {});
     world.add_component(e, 5usize);  // an integer can also be a component if you really want to
 
-    let sys1 = world.add_system(TestSystem {}, 0);
-    let sys2 = world.add_system(TestSystem {}, 100);
+    let sys1 = world.add_system::<TestSystem>(0);
+    let sys2 = world.add_system::<TestSystem>(100);
 
     println!("\n\nUPDATE 1:\n==========================\n");
     world.update();
