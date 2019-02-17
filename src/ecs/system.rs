@@ -1,9 +1,5 @@
 use crate::ecs::{EntityId, FamilyBuilder};
-use std::any::{Any, TypeId};
-use std::collections::HashMap;
 use std::fmt;
-use std::rc::Rc;
-use std::cell::RefCell;
 
 pub type SystemId = usize;
 
@@ -28,7 +24,6 @@ pub trait System {
 
     fn update(
         &mut self,
-        entity_ids: &Vec<EntityId>,
-        components: &HashMap<TypeId, Vec<Option<Rc<Box<RefCell<Any>>>>>>,
+        entity_ids: &[EntityId],
     );
 }

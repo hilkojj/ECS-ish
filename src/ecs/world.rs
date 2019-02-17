@@ -178,8 +178,7 @@ impl<'a> World {
                     .get(sys_meta.family_index)
                     .expect("sys_meta.family_index < self.family_metas.len()");
             sys_meta.system.deref_mut().update(
-                &fam_meta.entities,
-                &fam_meta.components
+                &fam_meta.entities
             );
         }
     }
