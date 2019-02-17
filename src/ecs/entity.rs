@@ -13,18 +13,20 @@ pub type AtomicEntity = Arc<Mutex<Entity>>;
 pub type EntityId = u64;
 
 pub struct Entity {
-    pub components: Vec<Option<Box<Any>>>,
-    pub component_bits: Bits,
-    pub family_bits: Bits,
-    pub dirty: bool,
+    pub(crate) components: Vec<Option<Box<Any>>>,
+    pub(crate) component_bits: Bits,
+    pub(crate) family_bits: Bits,
+    pub(crate) index_in_families: Vec<Option<usize>>,
+    pub(crate) dirty: bool,
 }
 
 impl Entity {
-    pub fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             components: Vec::new(),
             component_bits: Bits::new(),
             family_bits: Bits::new(),
+            index_in_families: Vec::new(),
             dirty: false,
         }
     }
@@ -46,6 +48,22 @@ impl Entity {
             return true
         }
         false
+    }
+
+    pub(crate) fn register_family(&mut self, fam_i: usize, index_in_fam: usize) {
+        while fam_i >= self.index_in_families.len() {
+            self.index_in_families.push(None);
+        }
+        let opt = self.index_in_families.get_mut(fam_i).expect("option for index_in_family");
+        opt.replace(index_in_fam);
+        self.family_bits.set(fam_i, true);
+    }
+
+    pub(crate) fn unregister_family(&mut self, fam_i: usize) {
+        if let Some(opt) = self.index_in_families.get_mut(fam_i) {
+            opt.take();
+        }
+        self.family_bits.set(fam_i, false);
     }
 
     pub fn comp<T>(&mut self, component_type: &ComponentType<T>) -> &mut T

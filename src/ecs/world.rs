@@ -90,7 +90,6 @@ impl<'a> World {
             let mut entity = atomic_entity.lock().unwrap();
             let removed_comp = entity.remove(type_i);
             entity.component_bits.set(type_i, false);
-            entity.dirty = true;
             if !entity.dirty && removed_comp {
                 self.dirty_entities.push(entity_id);
                 entity.dirty = true;

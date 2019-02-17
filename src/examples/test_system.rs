@@ -22,7 +22,9 @@ impl System for TestSystem {
             let mut entity = atomic_entity.lock().unwrap();
 
             let component = entity.comp(&self.usize_comp_type);
+            println!("before {}", component);
             *component += 1;
+            println!("after {}", component);
         }
     }
 }

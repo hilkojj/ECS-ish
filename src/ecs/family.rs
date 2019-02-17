@@ -1,4 +1,4 @@
-use crate::ecs::{Entity, AtomicEntity};
+use crate::ecs::{AtomicEntity, Entity};
 use crate::utils::Bits;
 
 pub struct FamilyMeta {
@@ -20,7 +20,7 @@ impl FamilyMeta {
         &mut self,
         family_i: usize,
         entity: &mut Entity,
-        atomic_entity: &AtomicEntity
+        atomic_entity: &AtomicEntity,
     ) {
         let already_in_family = entity.family_bits.get(family_i);
         let should_have = self.family.should_have(entity);
@@ -32,17 +32,20 @@ impl FamilyMeta {
 
         if should_have && !already_in_family {
             println!("Adding entity to family");
+            entity.register_family(family_i, self.entities.len());
             self.entities.push(atomic_entity.clone());
-            entity.family_bits.set(family_i, true);
         } else if !should_have && already_in_family {
             println!("Removing entity from family");
 
-            let entity_index_in_family = 0; // TODOOOOOOOOOOOOOOOOOOOOOOOOO
-            self.entities.swap_remove(entity_index_in_family);
-            entity.family_bits.set(family_i, false);
+            let index_in_fam = entity
+                .index_in_families
+                .get(family_i)
+                .expect("index in family")
+                .expect("index in family");
+            self.entities.swap_remove(index_in_fam);
+            entity.unregister_family(family_i);
         }
     }
-
 }
 
 pub struct Family {
