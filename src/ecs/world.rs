@@ -1,16 +1,17 @@
 use crate::ecs::*;
 
-use std::any::TypeId;
-use std::collections::HashMap;
-use std::ops::DerefMut;
-use std::rc::Rc;
-use std::cell::RefCell;
+use std::{
+    any::TypeId,
+    collections::HashMap,
+    sync::{Arc, Mutex},
+    ops::DerefMut
+};
 
 pub struct World {
     component_type_to_i: HashMap<TypeId, usize>,
     component_type_i_counter: usize,
 
-    entities: HashMap<EntityId, Entity>,
+    entities: HashMap<EntityId, AtomicEntity>,
     entity_id_counter: EntityId,
     dirty_entities: Vec<EntityId>,
 
@@ -38,7 +39,8 @@ impl<'a> World {
     pub fn create_entity(&mut self) -> EntityId {
         self.entity_id_counter += 1;
 
-        self.entities.insert(self.entity_id_counter, Entity::new());
+        self.entities
+            .insert(self.entity_id_counter, Arc::new(Mutex::new(Entity::new())));
 
         self.entity_id_counter
     }
@@ -65,11 +67,11 @@ impl<'a> World {
     where
         T: 'static,
     {
-        let type_id = TypeId::of::<T>();
-        let type_i = self.component_type_id_i(&type_id);
+        let type_i = self.component_type_id_i(&TypeId::of::<T>());
 
-        if let Some(entity) = self.entities.get_mut(&entity_id) {
-            entity.components.insert(type_id, Rc::new(Box::new(RefCell::new(component))));
+        if let Some(atomic_entity) = self.entities.get(&entity_id) {
+            let mut entity = atomic_entity.lock().unwrap();
+            entity.add(component, type_i);
             entity.component_bits.set(type_i, true);
             if !entity.dirty {
                 self.dirty_entities.push(entity_id);
@@ -82,12 +84,13 @@ impl<'a> World {
     where
         T: 'static,
     {
-        let type_id = TypeId::of::<T>();
-        let type_i = self.component_type_id_i(&type_id);
+        let type_i = self.component_type_id_i(&TypeId::of::<T>());
 
-        if let Some(entity) = self.entities.get_mut(&entity_id) {
-            let removed_comp = entity.components.remove(&type_id).is_some();
+        if let Some(atomic_entity) = self.entities.get_mut(&entity_id) {
+            let mut entity = atomic_entity.lock().unwrap();
+            let removed_comp = entity.remove(type_i);
             entity.component_bits.set(type_i, false);
+            entity.dirty = true;
             if !entity.dirty && removed_comp {
                 self.dirty_entities.push(entity_id);
                 entity.dirty = true;
@@ -148,10 +151,11 @@ impl<'a> World {
     pub fn update(&mut self) {
         // for each dirty entity -> recheck family memberships.
         for entity_id in &self.dirty_entities {
-            if let Some(entity) = self.entities.get_mut(&entity_id) {
+            if let Some(atomic_entity) = self.entities.get_mut(&entity_id) {
+                let mut entity = atomic_entity.lock().unwrap();
                 println!("Rechecking family memberships for Entity {}", entity_id);
                 for (fam_i, fam_meta) in self.family_metas.iter_mut().enumerate() {
-                    fam_meta.insert_or_take_from_family(fam_i, entity, *entity_id);
+                    fam_meta.insert_or_take_from_family(fam_i, &mut entity, &atomic_entity);
                 }
                 entity.dirty = false;
             }
@@ -166,20 +170,19 @@ impl<'a> World {
             .enumerate()
         {
             println!("Finding entities for new Family");
-            for (entity_id, entity) in &mut self.entities {
-                fam_meta.insert_or_take_from_family(fam_i, entity, *entity_id);
+            for atomic_entity in &mut self.entities.values() {
+                let mut entity = atomic_entity.lock().unwrap();
+                fam_meta.insert_or_take_from_family(fam_i, &mut entity, &atomic_entity);
             }
             fam_meta.initialized = true;
         }
 
         for sys_meta in &mut self.system_metas {
             let fam_meta = self
-                    .family_metas
-                    .get(sys_meta.family_index)
-                    .expect("sys_meta.family_index < self.family_metas.len()");
-            sys_meta.system.deref_mut().update(
-                &fam_meta.entities
-            );
+                .family_metas
+                .get(sys_meta.family_index)
+                .expect("sys_meta.family_index < self.family_metas.len()");
+            sys_meta.system.deref_mut().update(&fam_meta.entities);
         }
     }
 }

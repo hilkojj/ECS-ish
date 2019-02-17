@@ -1,4 +1,4 @@
-use crate::ecs::{EntityId, FamilyBuilder};
+use crate::ecs::{AtomicEntity, FamilyBuilder};
 use std::fmt;
 
 pub type SystemId = usize;
@@ -24,6 +24,6 @@ pub trait System {
 
     fn update(
         &mut self,
-        entity_ids: &[EntityId],
+        entities: &[AtomicEntity],
     );
 }

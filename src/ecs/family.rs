@@ -1,12 +1,10 @@
-use crate::ecs::{Entity, EntityId};
+use crate::ecs::{Entity, AtomicEntity};
 use crate::utils::Bits;
-
-use std::collections::HashMap;
 
 pub struct FamilyMeta {
     pub family: Family,
     pub initialized: bool,
-    pub entities: Vec<EntityId>,
+    pub entities: Vec<AtomicEntity>,
 }
 
 impl FamilyMeta {
@@ -22,7 +20,7 @@ impl FamilyMeta {
         &mut self,
         family_i: usize,
         entity: &mut Entity,
-        entity_id: EntityId,
+        atomic_entity: &AtomicEntity
     ) {
         let already_in_family = entity.family_bits.get(family_i);
         let should_have = self.family.should_have(entity);
@@ -34,16 +32,12 @@ impl FamilyMeta {
 
         if should_have && !already_in_family {
             println!("Adding entity to family");
-            self.entities.push(entity_id);
+            self.entities.push(atomic_entity.clone());
             entity.family_bits.set(family_i, true);
         } else if !should_have && already_in_family {
             println!("Removing entity from family");
 
-            let entity_index_in_family = self
-                .entities
-                .iter()
-                .position(|id| id == &entity_id)
-                .expect("entity_id to have a position in self.entities");
+            let entity_index_in_family = 0; // TODOOOOOOOOOOOOOOOOOOOOOOOOO
             self.entities.swap_remove(entity_index_in_family);
             entity.family_bits.set(family_i, false);
         }

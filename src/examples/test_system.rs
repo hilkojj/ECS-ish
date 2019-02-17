@@ -1,4 +1,4 @@
-use crate::ecs::{EntityId, FamilyBuilder, System};
+use crate::ecs::{AtomicEntity, FamilyBuilder, System};
 
 pub struct TestSystem {}
 
@@ -15,9 +15,16 @@ impl System for TestSystem {
 
     fn update(
         &mut self,
-        entity_ids: &[EntityId],
+        entities: &[AtomicEntity],
     ) {
-        println!("hi im gonna update: {:?}", entity_ids);
+        println!("hi im gonna update {} entities", entities.len());
+
+        for atomic_entity in entities {
+            let mut entity = atomic_entity.lock().unwrap();
+
+            let component = entity.comp::<usize>();
+            *component += 1;
+        }
 
     }
 }
