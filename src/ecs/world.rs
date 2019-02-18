@@ -65,7 +65,7 @@ impl<'a> World {
 
     pub fn add_component<T>(&mut self, entity_id: EntityId, component: T)
     where
-        T: 'static,
+        T: 'static + Send + Sync,
     {
         let type_i = self.component_type_id_i(&TypeId::of::<T>());
 
@@ -105,7 +105,7 @@ impl<'a> World {
     {
         // let the system specify what family of entities it wants:
         let mut family = Family::new();
-        let mut system = T::create(FamilyBuilder::new(self, &mut family));
+        let system = T::create(FamilyBuilder::new(self, &mut family));
 
         let family_index;
 

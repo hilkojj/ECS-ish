@@ -8,6 +8,9 @@ mod world;
 pub use system::*;
 mod system;
 
+pub use multi_threaded_system::*;
+mod multi_threaded_system;
+
 pub use family_builder::FamilyBuilder;
 mod family_builder;
 

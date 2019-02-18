@@ -13,7 +13,7 @@ pub type AtomicEntity = Arc<Mutex<Entity>>;
 pub type EntityId = u64;
 
 pub struct Entity {
-    pub(crate) components: Vec<Option<Box<Any>>>,
+    pub(crate) components: Vec<Option<Box<Any + Send + Sync>>>,
     pub(crate) component_bits: Bits,
     pub(crate) family_bits: Bits,
     pub(crate) index_in_families: Vec<Option<usize>>,
@@ -33,7 +33,7 @@ impl Entity {
 
     pub(crate) fn add<T>(&mut self, comp: T, comp_index: usize)
     where
-        T: 'static,
+        T: 'static + Send + Sync,
     {
         while comp_index >= self.components.len() {
             self.components.push(None);
@@ -85,7 +85,7 @@ impl Entity {
         T: 'static,
     {
         let comp_opt = self.components.get_mut(component_type.index)?;
-        let mut any_mut_ref = comp_opt.as_mut()?.deref_mut();
+        let any_mut_ref = comp_opt.as_mut()?.deref_mut();
         Some(any_mut_ref.downcast_mut::<T>()?)
     }
 }

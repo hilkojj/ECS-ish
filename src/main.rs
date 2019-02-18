@@ -47,10 +47,14 @@ fn main() {
     world.update();
 
     world.remove_system(sys1);
+    world.add_system::<TestMultiThreadedSystem>(4);
+    
+    println!("\n\nUPDATE 2:\n==========================\n");
+    world.update();
     
     println!("removed component? {}", world.remove_component::<usize>(e));
-
-    println!("\n\nUPDATE 2:\n==========================\n");
+    
+    println!("\n\nUPDATE 3:\n==========================\n");
     world.update();
 
     world.remove_system(sys2);
