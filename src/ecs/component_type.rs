@@ -1,6 +1,7 @@
 
 use std::marker::PhantomData;
 
+#[derive(Clone)]
 pub struct ComponentType<T> {
 
     pub(crate) index: usize,
