@@ -1,4 +1,6 @@
-use crate::ecs::{AtomicEntity, ComponentType, Entity, FamilyBuilder, MultiThreadedSystem, System};
+use crate::ecs::{
+    AfterUpdate, AtomicEntity, ComponentType, Entity, FamilyBuilder, MultiThreadedSystem, System,
+};
 
 #[derive(Clone)]
 pub struct TestMultiThreadedSystem {
@@ -16,13 +18,13 @@ impl System for TestMultiThreadedSystem {
         s
     }
 
-    fn update(&mut self, entities: &[AtomicEntity]) {
-        self.process_all(entities);
+    fn update(&mut self, entities: &[AtomicEntity], after_update: AfterUpdate) {
+        self.process_all(entities, after_update);
     }
 }
 
 impl MultiThreadedSystem for TestMultiThreadedSystem {
-    fn process(&self, entity: &mut Entity) {
+    fn process(&self, entity: &mut Entity, after_update: AfterUpdate) {
         let component = entity.comp(&self.usize_comp_type);
         println!("before {}", component);
         *component += 100;

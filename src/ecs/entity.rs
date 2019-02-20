@@ -12,8 +12,11 @@ pub type AtomicEntity = Arc<Mutex<Entity>>;
 
 pub type EntityId = u64;
 
+pub type Component = Any + Send + Sync;
+
 pub struct Entity {
-    pub(crate) components: Vec<Option<Box<Any + Send + Sync>>>,
+    pub(crate) id: EntityId,
+    pub(crate) components: Vec<Option<Box<Component>>>,
     pub(crate) component_bits: Bits,
     pub(crate) family_bits: Bits,
     pub(crate) index_in_families: Vec<Option<usize>>,
@@ -21,14 +24,19 @@ pub struct Entity {
 }
 
 impl Entity {
-    pub(crate) fn new() -> Self {
+    pub(crate) fn new(id: EntityId) -> Self {
         Self {
+            id,
             components: Vec::new(),
             component_bits: Bits::new(),
             family_bits: Bits::new(),
             index_in_families: Vec::new(),
             dirty: false,
         }
+    }
+
+    pub fn id(&self) -> EntityId {
+        self.id
     }
 
     pub(crate) fn add<T>(&mut self, comp: T, comp_index: usize)

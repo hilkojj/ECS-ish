@@ -1,4 +1,4 @@
-use crate::ecs::{AtomicEntity, ComponentType, FamilyBuilder, System};
+use crate::ecs::{AtomicEntity, ComponentType, FamilyBuilder, System, AfterUpdate};
 
 pub struct TestSystem {
     usize_comp_type: ComponentType<usize>,
@@ -15,7 +15,7 @@ impl System for TestSystem {
         s
     }
 
-    fn update(&mut self, entities: &[AtomicEntity]) {
+    fn update(&mut self, entities: &[AtomicEntity], after_update: AfterUpdate) {
         println!("hi im gonna update {} entities", entities.len());
 
         for atomic_entity in entities {
@@ -26,5 +26,11 @@ impl System for TestSystem {
             *component += 1;
             println!("after {}", component);
         }
+
+        after_update.exec(|world| {
+            println!("I am executed after the update, i am going to create an entity");
+            let e = world.create_entity();
+            world.add_component(e, 33usize);
+        });
     }
 }

@@ -3,8 +3,8 @@ use crate::ecs::*;
 use std::{
     any::TypeId,
     collections::HashMap,
+    ops::DerefMut,
     sync::{Arc, Mutex},
-    ops::DerefMut
 };
 
 pub struct World {
@@ -39,8 +39,10 @@ impl<'a> World {
     pub fn create_entity(&mut self) -> EntityId {
         self.entity_id_counter += 1;
 
-        self.entities
-            .insert(self.entity_id_counter, Arc::new(Mutex::new(Entity::new())));
+        self.entities.insert(
+            self.entity_id_counter,
+            Arc::new(Mutex::new(Entity::new(self.entity_id_counter))),
+        );
 
         self.entity_id_counter
     }
@@ -176,12 +178,20 @@ impl<'a> World {
             fam_meta.initialized = true;
         }
 
+        let after_update = AfterUpdate::new();
         for sys_meta in &mut self.system_metas {
             let fam_meta = self
                 .family_metas
                 .get(sys_meta.family_index)
                 .expect("sys_meta.family_index < self.family_metas.len()");
-            sys_meta.system.deref_mut().update(&fam_meta.entities);
+            sys_meta
+                .system
+                .deref_mut()
+                .update(&fam_meta.entities, after_update.clone());
+        }
+        let functions = after_update.functions.lock().unwrap();
+        for fun in &*functions {
+            fun(self);
         }
     }
 }
