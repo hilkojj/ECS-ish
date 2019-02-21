@@ -2,10 +2,7 @@
 // https://doc.rust-lang.org/1.25.0/book/second-edition/ch20-03-designing-the-interface.html
 
 use std::{
-    sync::{
-        mpsc::{Receiver, Sender},
-        Arc, Mutex,
-    },
+    sync::{Arc, Mutex},
     thread,
 };
 
