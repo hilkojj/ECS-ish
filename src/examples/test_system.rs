@@ -25,12 +25,9 @@ impl System for TestSystem {
             println!("before {}", component);
             *component += 1;
             println!("after {}", component);
-        }
 
-        after_update.exec(|world| {
-            println!("I am executed after the update, i am going to create an entity");
-            let e = world.create_entity();
-            world.add_component(e, 33usize);
-        });
+            after_update.add_clonable_component(entity.id(), &7usize);
+
+        }
     }
 }
