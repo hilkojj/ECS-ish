@@ -33,7 +33,7 @@ fn main() {
     println!("bits.none(&bits2) -> {}", bits.none(&bits2));
     */
 
-    let mut world = World::new();
+    let mut world = World::new(8);
 
     let e = world.create_entity();
 

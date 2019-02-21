@@ -3,7 +3,7 @@
 
 use std::{
     sync::{
-        mpsc::{Receiver, Sender, channel},
+        mpsc::{Receiver, Sender},
         Arc, Mutex,
     },
     thread,
@@ -23,21 +23,21 @@ type Job = Box<FnBox + Send + 'static>;
 
 enum Message {
     Execute(Job),
-    Die
+    Die,
 }
 
 struct Worker {
-    thread: thread::JoinHandle<()>
+    thread: thread::JoinHandle<()>,
 }
 
 impl Worker {
-    fn new(receiver: Arc<Mutex<Receiver<Message>>>) -> Self {
+    fn new(messages: Messages) -> Self {
         let thread = thread::spawn(move || loop {
-            let mess = receiver.lock().unwrap().recv().unwrap();
-
-            match mess {
-                Message::Die => break,
-                Message::Execute(job) => job.call_box()
+            if let Some(mess) = messages.lock().unwrap().pop() {
+                match mess {
+                    Message::Die => break,
+                    Message::Execute(job) => job.call_box(),
+                }
             }
         });
 
@@ -45,43 +45,44 @@ impl Worker {
     }
 }
 
+type Messages = Arc<Mutex<Vec<Message>>>;
+
 pub struct ThreadPool {
     workers: Vec<Worker>,
-    sender: Sender<Message>,
+    messages: Messages,
 }
 
 impl ThreadPool {
-
     pub fn new(size: usize) -> Self {
-        assert!(size > 0, "Tried to create a ThreadPool without threads. :(");
-
-        let (sender, receiver) = channel();
-        let atomic_receiver = Arc::new(Mutex::new(receiver));
+        let messages = Arc::new(Mutex::new(Vec::new()));
         let mut workers = Vec::with_capacity(size);
         for _ in 0..size {
-            workers.push(Worker::new(Arc::clone(&atomic_receiver)));
+            workers.push(Worker::new(Arc::clone(&messages)));
         }
 
-        Self {
-            workers,
-            sender
-        }
+        Self { workers, messages }
     }
 
     pub fn execute<F>(&self, function: F)
-        where
-            F: FnOnce() + Send + 'static
+    where
+        F: FnOnce() + Send + 'static,
     {
+        if self.workers.is_empty() {
+            panic!("This threadpool has no threads");
+        }
         let job = Box::new(function);
-        self.sender.send(Message::Execute(job)).unwrap();
+        self.messages.lock().unwrap().push(Message::Execute(job));
     }
 
+    pub fn idle(&self) -> bool {
+        self.messages.lock().unwrap().is_empty()
+    }
 }
 
 impl Drop for ThreadPool {
     fn drop(&mut self) {
         for _ in &self.workers {
-            self.sender.send(Message::Die).unwrap();
+            self.messages.lock().unwrap().push(Message::Die);
         }
         while let Some(worker) = self.workers.pop() {
             worker.thread.join().unwrap();
