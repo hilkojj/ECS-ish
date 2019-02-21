@@ -1,4 +1,5 @@
 use crate::ecs::*;
+use crate::utils::ThreadPool;
 
 use std::{
     any::TypeId,
@@ -18,10 +19,12 @@ pub struct World {
     family_metas: Vec<FamilyMeta>,
     system_metas: Vec<SystemMeta>,
     system_id_counter: SystemId,
+
+    thread_pool: ThreadPool,
 }
 
 impl<'a> World {
-    pub fn new() -> Self {
+    pub fn new(nr_of_threads: usize) -> Self {
         Self {
             component_type_to_i: HashMap::new(),
             component_type_i_counter: 0,
@@ -33,6 +36,8 @@ impl<'a> World {
             family_metas: Vec::new(),
             system_metas: Vec::new(),
             system_id_counter: 0,
+
+            thread_pool: ThreadPool::new(nr_of_threads),
         }
     }
 
@@ -159,10 +164,15 @@ impl<'a> World {
                 .family_metas
                 .get(sys_meta.family_index)
                 .expect("sys_meta.family_index < self.family_metas.len()");
-            sys_meta
+
+            let sys = sys_meta
                 .system
-                .deref_mut()
-                .update(&fam_meta.entities, after_update.clone());
+                .deref_mut();
+            
+            // single threaded update
+            sys.update(&fam_meta.entities, after_update.clone());
+            // multi threaded update
+            sys.threaded_update(&fam_meta.entities, after_update.clone(), &self.thread_pool);
         }
         self.handle_after_update(after_update);
     }
