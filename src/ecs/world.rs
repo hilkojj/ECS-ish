@@ -3,8 +3,8 @@ use crate::ecs::*;
 use std::{
     any::TypeId,
     collections::HashMap,
+    ops::DerefMut,
     sync::{Arc, Mutex},
-    ops::DerefMut
 };
 
 pub struct World {
@@ -39,8 +39,10 @@ impl<'a> World {
     pub fn create_entity(&mut self) -> EntityId {
         self.entity_id_counter += 1;
 
-        self.entities
-            .insert(self.entity_id_counter, Arc::new(Mutex::new(Entity::new())));
+        self.entities.insert(
+            self.entity_id_counter,
+            Arc::new(Mutex::new(Entity::new(self.entity_id_counter))),
+        );
 
         self.entity_id_counter
     }
@@ -148,6 +150,31 @@ impl<'a> World {
     }
 
     pub fn update(&mut self) {
+        self.clean_entities();
+        self.init_new_families();
+
+        let after_update = AfterUpdate::new();
+        for sys_meta in &mut self.system_metas {
+            let fam_meta = self
+                .family_metas
+                .get(sys_meta.family_index)
+                .expect("sys_meta.family_index < self.family_metas.len()");
+            sys_meta
+                .system
+                .deref_mut()
+                .update(&fam_meta.entities, after_update.clone());
+        }
+        self.handle_after_update(after_update);
+    }
+
+    fn handle_after_update(&mut self, after_update: AfterUpdate) {
+        let functions = after_update.functions.lock().unwrap();
+        for fun in &*functions {
+            fun(self);
+        }
+    }
+
+    fn clean_entities(&mut self) {
         // for each dirty entity -> recheck family memberships.
         for entity_id in &self.dirty_entities {
             if let Some(atomic_entity) = self.entities.get_mut(&entity_id) {
@@ -160,7 +187,9 @@ impl<'a> World {
             }
         }
         self.dirty_entities.clear();
+    }
 
+    fn init_new_families(&mut self) {
         // for each new family -> find entities
         for (fam_i, fam_meta) in self
             .family_metas
@@ -174,14 +203,6 @@ impl<'a> World {
                 fam_meta.insert_or_take_from_family(fam_i, &mut entity, &atomic_entity);
             }
             fam_meta.initialized = true;
-        }
-
-        for sys_meta in &mut self.system_metas {
-            let fam_meta = self
-                .family_metas
-                .get(sys_meta.family_index)
-                .expect("sys_meta.family_index < self.family_metas.len()");
-            sys_meta.system.deref_mut().update(&fam_meta.entities);
         }
     }
 }

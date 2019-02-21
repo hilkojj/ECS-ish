@@ -1,4 +1,4 @@
-use crate::ecs::{System, AtomicEntity, Entity};
+use crate::ecs::{System, AtomicEntity, Entity, AfterUpdate};
 use std::{
     sync::Arc,
     thread
@@ -6,7 +6,7 @@ use std::{
 
 pub trait MultiThreadedSystem: 'static + System + Clone + Send + Sync {
 
-    fn process_all(&self, entities: &[AtomicEntity]) {
+    fn process_all(&self, entities: &[AtomicEntity], after_update: AfterUpdate) {
         println!("hi im gonna update {} entities MULTITHREADED", entities.len());
 
         let mut handles = Vec::new();
@@ -14,10 +14,11 @@ pub trait MultiThreadedSystem: 'static + System + Clone + Send + Sync {
         for atomic_entity in entities {
             let atomic_entity = Arc::clone(atomic_entity);
             let sys = self.clone();
+            let after_update = after_update.clone();
             let handle = thread::spawn(move || {
                 
                 let mut entity = atomic_entity.lock().unwrap();
-                sys.process(&mut entity);
+                sys.process(&mut entity, after_update);
 
             });
             handles.push(handle);
@@ -29,6 +30,6 @@ pub trait MultiThreadedSystem: 'static + System + Clone + Send + Sync {
 
     }
 
-    fn process(&self, entity: &mut Entity);
+    fn process(&self, entity: &mut Entity, after_update: AfterUpdate);
 
 }
