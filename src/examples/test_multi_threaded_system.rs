@@ -19,13 +19,13 @@ impl System for TestMultiThreadedSystem {
         s
     }
 
-    fn threaded_update(&mut self, entities: &[AtomicEntity], after_update: AfterUpdate, pool: &ThreadPool) {
-        self.process_all(entities, after_update, pool);
+    fn threaded_update(&mut self, entities: &[AtomicEntity], after_update: AfterUpdate, pool: &ThreadPool, delta_time: f32) {
+        self.process_all(entities, after_update, pool, delta_time);
     }
 }
 
 impl MultiThreadedSystem for TestMultiThreadedSystem {
-    fn process(&self, entity: &mut Entity, after_update: AfterUpdate) {
+    fn process(&self, entity: &mut Entity, after_update: AfterUpdate, delta_time: f32) {
         let component = entity.comp(&self.usize_comp_type);
         println!("before {}", component);
         *component += 100;

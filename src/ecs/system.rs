@@ -1,4 +1,4 @@
-use crate::ecs::{AtomicEntity, FamilyBuilder, AfterUpdate};
+use crate::ecs::{AfterUpdate, AtomicEntity, FamilyBuilder};
 use crate::utils::ThreadPool;
 use std::fmt;
 
@@ -25,8 +25,14 @@ pub trait System {
     where
         Self: Sized;
 
-    fn update(&mut self, entities: &[AtomicEntity], after_update: AfterUpdate) {}
+    fn update(&mut self, entities: &[AtomicEntity], after_update: AfterUpdate, delta_time: f32) {}
 
-    fn threaded_update(&mut self, entities: &[AtomicEntity], after_update: AfterUpdate, pool: &ThreadPool) {}
-
+    fn threaded_update(
+        &mut self,
+        entities: &[AtomicEntity],
+        after_update: AfterUpdate,
+        pool: &ThreadPool,
+        delta_time: f32,
+    ) {
+    }
 }

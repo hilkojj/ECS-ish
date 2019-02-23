@@ -44,18 +44,18 @@ fn main() {
     let sys2 = world.add_system::<TestSystem>(100);
 
     println!("\n\nUPDATE 1:\n==========================\n");
-    world.update();
+    world.update(0.1);
 
     world.remove_system(sys1);
     world.add_system::<TestMultiThreadedSystem>(4);
     
     println!("\n\nUPDATE 2:\n==========================\n");
-    world.update();
+    world.update(0.1);
     
     println!("removed component? {}", world.remove_component::<usize>(e));
     
     println!("\n\nUPDATE 3:\n==========================\n");
-    world.update();
+    world.update(0.1);
 
     world.remove_system(sys2);
 

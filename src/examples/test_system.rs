@@ -15,7 +15,7 @@ impl System for TestSystem {
         s
     }
 
-    fn update(&mut self, entities: &[AtomicEntity], after_update: AfterUpdate) {
+    fn update(&mut self, entities: &[AtomicEntity], after_update: AfterUpdate, delta_time: f32) {
         println!("hi im gonna update {} entities", entities.len());
 
         for atomic_entity in entities {

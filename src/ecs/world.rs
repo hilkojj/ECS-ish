@@ -154,7 +154,7 @@ impl<'a> World {
         false
     }
 
-    pub fn update(&mut self) {
+    pub fn update(&mut self, delta_time: f32) {
         self.clean_entities();
         self.init_new_families();
 
@@ -170,9 +170,9 @@ impl<'a> World {
                 .deref_mut();
             
             // single threaded update
-            sys.update(&fam_meta.entities, after_update.clone());
+            sys.update(&fam_meta.entities, after_update.clone(), delta_time);
             // multi threaded update
-            sys.threaded_update(&fam_meta.entities, after_update.clone(), &self.thread_pool);
+            sys.threaded_update(&fam_meta.entities, after_update.clone(), &self.thread_pool, delta_time);
         }
         self.handle_after_update(after_update);
     }
