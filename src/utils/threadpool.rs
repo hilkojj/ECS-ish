@@ -30,11 +30,17 @@ struct Worker {
 impl Worker {
     fn new(messages: Messages) -> Self {
         let thread = thread::spawn(move || loop {
-            if let Some(mess) = messages.lock().unwrap().pop() {
-                match mess {
-                    Message::Die => break,
-                    Message::Execute(job) => job.call_box(),
+            let mess;
+            let mut messages = messages.lock().unwrap();
+            loop {
+                if messages.len() != 0 {
+                    mess = messages.pop().unwrap();
+                    break
                 }
+            }
+            match mess {
+                Message::Die => break,
+                Message::Execute(job) => job.call_box(),
             }
         });
 
