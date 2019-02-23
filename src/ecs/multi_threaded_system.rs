@@ -6,10 +6,6 @@ use std::sync::Arc;
 
 pub trait MultiThreadedSystem: 'static + System + Clone + Send + Sync {
     fn process_all(&self, entities: &[AtomicEntity], after_update: AfterUpdate, pool: &ThreadPool) {
-        println!(
-            "hi im gonna update {} entities MULTITHREADED",
-            entities.len()
-        );
 
         for atomic_entity in entities {
             let atomic_entity = Arc::clone(atomic_entity);

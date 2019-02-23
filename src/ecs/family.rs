@@ -25,17 +25,10 @@ impl FamilyMeta {
         let already_in_family = entity.family_bits.get(family_i);
         let should_have = self.family.should_have(entity);
 
-        println!(
-            "Does entity already belong to this family? {}\nShould it be in family? {}",
-            already_in_family, should_have
-        );
-
         if should_have && !already_in_family {
-            println!("Adding entity to family");
             entity.register_family(family_i, self.entities.len());
             self.entities.push(atomic_entity.clone());
         } else if !should_have && already_in_family {
-            println!("Removing entity from family");
 
             let index_in_fam = entity
                 .index_in_families

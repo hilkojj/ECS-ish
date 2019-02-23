@@ -1,6 +1,6 @@
 use std::{mem, fmt, format, cmp};
 
-type Int = u8;
+type Int = u64;
 const BITS_PER_INT: usize = mem::size_of::<Int>() * 8;
 
 pub struct Bits {
@@ -49,8 +49,6 @@ impl Bits {
                 if let Some(other_int) = other.ints.get(i) {
 
                     // int is both found in self and other.
-                    println!("self_int = {:08b}, other_int = {:08b}", self_int, other_int);
-
                     if self_int & other_int != *self_int {
                         return false
                     }
@@ -74,8 +72,6 @@ impl Bits {
                 if let Some(other_int) = other.ints.get(i) {
 
                     // int is both found in self and other.
-                    println!("self_int = {:08b}, other_int = {:08b}", self_int, other_int);
-
                     if self_int & other_int != 0 {
                         return true
                     }
@@ -113,7 +109,7 @@ impl fmt::Display for Bits {
         let mut res = String::new();
 
         for i in (0..self.ints.len()).rev() {
-            res = res + &format!("{:08b}", &self.ints.get(i).expect("test"));
+            res = res + &format!("{:64b}", &self.ints.get(i).expect("test"));
         }
 
         write!(f, "{}", res)

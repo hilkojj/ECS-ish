@@ -20,7 +20,6 @@ impl<'a> FamilyBuilder<'a> {
         T: 'static,
     {
         let i = self.world.component_type_i::<T>();
-        println!("adding: {}", i);
         self.component_indexes.push(i);
         ComponentType::<T>::new(i)
     }

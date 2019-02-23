@@ -189,7 +189,6 @@ impl<'a> World {
         for entity_id in &self.dirty_entities {
             if let Some(atomic_entity) = self.entities.get_mut(&entity_id) {
                 let mut entity = atomic_entity.lock().unwrap();
-                println!("Rechecking family memberships for Entity {}", entity_id);
                 for (fam_i, fam_meta) in self.family_metas.iter_mut().enumerate() {
                     fam_meta.insert_or_take_from_family(fam_i, &mut entity, &atomic_entity);
                 }
@@ -207,7 +206,6 @@ impl<'a> World {
             .filter(|meta| !meta.initialized)
             .enumerate()
         {
-            println!("Finding entities for new Family");
             for atomic_entity in &mut self.entities.values() {
                 let mut entity = atomic_entity.lock().unwrap();
                 fam_meta.insert_or_take_from_family(fam_i, &mut entity, &atomic_entity);
